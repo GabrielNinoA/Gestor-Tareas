@@ -1,0 +1,14 @@
+Íconos para el manifest.json — Sesión 16
+Electiva - PWA · UPTC
+
+  icon-192.png             192×192, purpose "any" — obligatorio.
+  icon-512.png              512×512, purpose "any" — obligatorio.
+  icon-512-maskable.png     512×512, purpose "maskable" (zona segura central).
+  icon-96-incorrecto.png    96×96 — a propósito NO cumple el tamaño mínimo.
+
+Para la actividad "Ejecute, Observe y Analice": agrega icon-96-incorrecto.png
+a tu manifest.json como si fuera el ícono de 192×192 (mismo <sizes>) y revisa
+qué error o advertencia muestra Chrome en DevTools → Application → Manifest.
+Luego reemplázalo por el icon-192.png real y confirma que el error desaparece.
+
+UPTC · Facultad de Ingeniería · Electiva - PWA

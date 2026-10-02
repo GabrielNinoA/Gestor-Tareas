@@ -1,0 +1,83 @@
+:root {
+  --ink: #1a1a1a;
+  --gold: #ffcc29;
+  --gold-deep: #b8860b;
+  --line: #e2e2e2;
+  --danger: #c0392b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  background: #f4f1e8;
+  color: var(--ink);
+}
+
+.app {
+  max-width: 560px;
+  margin: 3em auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 40px -20px rgba(0,0,0,.25);
+  padding: 2em 2.2em;
+}
+
+h1 { font-size: 1.6em; margin: 0 0 .1em; }
+.subtitulo { color: #777; font-size: .85em; margin: 0 0 1.4em; }
+
+.form-tarea {
+  display: flex;
+  gap: .5em;
+  margin-bottom: 1.4em;
+  flex-wrap: wrap;
+}
+.form-tarea input[type="text"] {
+  flex: 1 1 220px;
+  padding: .6em .8em;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: .95em;
+}
+.form-tarea select {
+  padding: .6em .5em;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.form-tarea button {
+  background: var(--ink);
+  color: var(--gold);
+  border: none;
+  border-radius: 8px;
+  padding: .6em 1.1em;
+  font-weight: 700;
+  cursor: pointer;
+}
+.form-tarea button:hover { background: #000; }
+
+.lista-tareas { list-style: none; margin: 0; padding: 0; display: grid; gap: .5em; }
+.tarea {
+  display: flex;
+  align-items: center;
+  gap: .7em;
+  padding: .7em .9em;
+  border: 1px solid var(--line);
+  border-left: 4px solid #999;
+  border-radius: 8px;
+}
+.tarea--baja { border-left-color: #6fa8dc; }
+.tarea--media { border-left-color: var(--gold-deep); }
+.tarea--alta { border-left-color: var(--danger); }
+.tarea span { flex: 1; }
+.tarea--completada span { text-decoration: line-through; color: #999; }
+.btn-eliminar {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: .3em .6em;
+  font-size: .78em;
+  cursor: pointer;
+  color: var(--danger);
+}
+.btn-eliminar:hover { background: #fdecea; }

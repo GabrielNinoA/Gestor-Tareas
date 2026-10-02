@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor de Tareas</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1A1A1A">
+</head>
+
+<body>
+  <main class="app">
+    <h1>Gestor de Tareas</h1>
+    <p class="subtitulo">Proyecto base — Electiva PWA, cierre de los Bloques 1 y 2.</p>
+
+    <form id="form-tarea" class="form-tarea">
+      <input type="text" id="input-titulo" placeholder="Nueva tarea..." required>
+      <input type="password" id="input-password" placeholder="Contraseña para nota (opcional)">
+      <textarea id="input-nota" placeholder="Nota privada (opcional)"></textarea>
+      <select id="input-prioridad">
+        <option value="baja">Baja</option>
+        <option value="media" selected>Media</option>
+        <option value="alta">Alta</option>
+      </select>
+      <button type="submit">Agregar</button>
+    </form>
+
+    <ul id="lista-tareas" class="lista-tareas"></ul>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+
+</html>
