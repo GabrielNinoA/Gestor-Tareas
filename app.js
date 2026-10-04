@@ -110,3 +110,25 @@ if ('serviceWorker' in navigator) {
     .then(reg => console.log('SW registrado:', reg.scope))
     .catch(err => console.error('Error al registrar SW:', err));
 }
+
+window.addEventListener('online', () => document.getElementById('indicador-conexion').hidden = true);
+window.addEventListener('offline', () => document.getElementById('indicador-conexion').hidden = false);
+if (!navigator.onLine) {
+  document.getElementById('indicador-conexion').hidden = false;
+}
+
+let deferredPrompt;
+const btnInstalar = document.getElementById('btn-instalar');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  btnInstalar.hidden = false;
+});
+
+btnInstalar.addEventListener('click', async () => {
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  btnInstalar.hidden = true;
+});
