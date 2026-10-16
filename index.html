@@ -4,19 +4,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestor de Tareas</title>
+  <title>Gestor de Tareas PWA</title>
   <link rel="stylesheet" href="css/estilos.css">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1A1A1A">
 </head>
 
 <body>
   <div id="indicador-conexion" hidden>Sin conexión — mostrando datos guardados</div>
   <button id="btn-instalar" hidden>Instalar App</button>
-  <main class="app">
-    <h1>Gestor de Tareas</h1>
-    <p class="subtitulo">Proyecto base — Electiva PWA, cierre de los Bloques 1 y 2.</p>
 
+  <main class="app">
+    <header class="app-header">
+      <div class="header-titulos">
+        <h1>Gestor de Tareas</h1>
+        <p class="subtitulo">PWA con APIs de Dispositivo: Cámara, Micrófono, Ubicación y Sensores</p>
+      </div>
+      <button id="btn-abrir-mic" type="button" class="btn-utilidad" title="Probar medidor de nivel de micrófono (Sesión 24)">
+        🎤 Medidor Micrófono
+      </button>
+    </header>
+
+    <!-- Barra de Notificación / Mensajes de Estado y Feedback -->
+    <div id="mensaje-feedback" class="feedback-banner" hidden role="alert" aria-live="polite"></div>
+
+    <!-- Barra de Sensores y Deshacer (Sesión 25: Mejora Progresiva) -->
+    <section class="barra-sensores" aria-label="Control de sensores de movimiento y deshacer">
+      <div class="botones-sensores">
+        <button id="btn-deshacer" type="button" class="btn-deshacer" disabled title="Deshacer la última eliminación (Accesible)">
+          ↩ Deshacer eliminación
+        </button>
+        <button id="btn-sensores" type="button" class="btn-sensores" title="Activa la sacudida para deshacer y lectura de inclinación">
+          📳 Activar agitar para deshacer
+        </button>
+      </div>
+      <div class="info-sensores-contenedor">
+        <span id="lectura-inclinacion" class="badge-sensores">Inclinación: Sensor inactivo</span>
+        <span id="aviso-sensores" class="aviso-sensores"></span>
+      </div>
+    </section>
+
+    <!-- Formulario para agregar tareas -->
     <form id="form-tarea" class="form-tarea">
       <input type="text" id="input-titulo" placeholder="Nueva tarea..." required>
       <input type="password" id="input-password" placeholder="Contraseña para nota (opcional)">
@@ -26,11 +54,82 @@
         <option value="media" selected>Media</option>
         <option value="alta">Alta</option>
       </select>
-      <button type="submit">Agregar</button>
+      <button type="submit" id="btn-submit-tarea">Agregar Tarea</button>
     </form>
 
-    <ul id="lista-tareas" class="lista-tareas"></ul>
+    <!-- Lista de tareas con adjuntos -->
+    <ul id="lista-tareas" class="lista-tareas" aria-label="Lista de tareas"></ul>
   </main>
+
+  <!-- DIÁLOGO: Permiso Respetuoso de Cámara (Sesión 24 Actividad 4) -->
+  <dialog id="dlg-permiso-camara" class="dialog-modal">
+    <div class="dialog-contenido">
+      <div class="dialog-icono">📷</div>
+      <h3>Permiso de Cámara</h3>
+      <p id="texto-explicacion-camara">
+        Usaremos tu cámara solo para adjuntar una foto a la tarea seleccionada.
+        La imagen se guarda localmente en tu dispositivo y nunca viaja a ningún servidor externo.
+      </p>
+      <div class="dialog-acciones">
+        <button id="btn-cancelar-permiso" type="button" class="btn-secundario">Cancelar</button>
+        <button id="btn-confirmar-permiso" type="button" class="btn-primario">Continuar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- DIÁLOGO: Cámara Compartida para Fotos (Sesión 24) -->
+  <dialog id="dlg-camara" class="dialog-modal dialog-camara">
+    <div class="dialog-contenido">
+      <div class="dialog-cabecera">
+        <h3>Capturar Foto para Tarea</h3>
+        <button id="btn-cerrar-camara-x" type="button" class="btn-icono-cerrar" title="Cerrar cámara">✕</button>
+      </div>
+
+      <div class="visor-camara-contenedor">
+        <video id="video-camara" autoplay playsinline muted></video>
+      </div>
+
+      <div class="dialog-acciones dialog-acciones-camara">
+        <button id="btn-cambiar-camara" type="button" class="btn-secundario" title="Alternar frontal/trasera">
+          🔄 Cambiar cámara
+        </button>
+        <button id="btn-capturar-foto" type="button" class="btn-primario btn-capturar">
+          📸 Tomar Foto
+        </button>
+        <button id="btn-cerrar-camara" type="button" class="btn-secundario">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- DIÁLOGO: Medidor de Nivel de Micrófono (Sesión 24) -->
+  <dialog id="dlg-microfono" class="dialog-modal">
+    <div class="dialog-contenido">
+      <div class="dialog-cabecera">
+        <h3>Medidor de Micrófono (Web Audio API)</h3>
+        <button id="btn-cerrar-mic-x" type="button" class="btn-icono-cerrar" title="Cerrar">✕</button>
+      </div>
+      <p class="subtitulo-modal">Monitorea el nivel de volumen capturado en tiempo real (0.00 a 1.00):</p>
+      
+      <div class="medidor-visual">
+        <div class="barra-volumen-fondo">
+          <div id="barra-volumen-nivel" class="barra-volumen-nivel" style="width: 0%;"></div>
+        </div>
+        <div class="medidor-valores">
+          <span>Silencio (0.00)</span>
+          <span id="valor-volumen-actual" class="valor-volumen-destacado">0.00</span>
+          <span>Máximo (1.00)</span>
+        </div>
+      </div>
+
+      <div id="estado-mic-texto" class="estado-mic-texto">Micrófono activo y midiendo...</div>
+
+      <div class="dialog-acciones">
+        <button id="btn-detener-mic" type="button" class="btn-secundario">Detener y Cerrar</button>
+      </div>
+    </div>
+  </dialog>
 
   <script type="module" src="app.js"></script>
 </body>
