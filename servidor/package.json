@@ -1,0 +1,12 @@
+{
+  "name": "servidor-gestor-tareas",
+  "version": "1.0.0",
+  "description": "Mini servidor Node para servir la PWA, gestionar suscripciones Web Push y Background Sync",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

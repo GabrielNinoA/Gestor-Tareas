@@ -1,0 +1,6 @@
+node_modules/
+servidor/node_modules/
+servidor/claves-vapid.json
+servidor/datos.json
+claves-vapid.json
+datos.json

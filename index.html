@@ -44,6 +44,28 @@
       </div>
     </section>
 
+    <!-- Barra de Notificaciones Push y Sincronización Outbox (Sesión 26) -->
+    <section class="barra-push-sync" aria-label="Control de notificaciones push y sincronización outbox">
+      <div class="sync-estado-fila">
+        <span id="estado-sync" class="badge-sync">☁ Todo sincronizado con el servidor.</span>
+        <span id="estado-avisos" class="badge-avisos">Avisos sin activar</span>
+      </div>
+      <div class="botones-push-sync">
+        <button id="btn-avisos" type="button" class="btn-push" title="Pedir permiso y probar notificación local">
+          🔔 Activar avisos
+        </button>
+        <button id="btn-suscribir-push" type="button" class="btn-push btn-push--primario" title="Suscribir navegador a Push con VAPID">
+          📡 Suscribir a push
+        </button>
+        <button id="btn-push-prueba" type="button" class="btn-push" title="Enviar notificación push de prueba desde el servidor" hidden>
+          ✉ Enviar push de prueba
+        </button>
+        <button id="btn-cancelar-push" type="button" class="btn-push btn-push--secundario" title="Cancelar suscripción push actual" hidden>
+          🔕 Cancelar suscripción
+        </button>
+      </div>
+    </section>
+
     <!-- Formulario para agregar tareas -->
     <form id="form-tarea" class="form-tarea">
       <input type="text" id="input-titulo" placeholder="Nueva tarea..." required>

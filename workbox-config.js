@@ -5,32 +5,20 @@ module.exports = {
     'manifest.json',
     'css/*.css',
     '*.js',
-    'icons/*.png'
+    'icons/*.png',
   ],
+  // sw-propio.js es el CÓDIGO FUENTE del SW: no debe precachearse a sí mismo.
   globIgnores: [
     'node_modules/**/*',
+    'servidor/**/*',
+    'lib/**/*',
     'workbox-config.js',
-    'package*.json'
+    'sw-propio.js',
+    'sw.js.map',
+    'claves-vapid.json',
+    'datos.json',
+    'referencia-typescript/**/*',
   ],
+  swSrc: 'sw-propio.js',
   swDest: 'sw.js',
-  runtimeCaching: [
-    {
-      urlPattern: /\/icons\//,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'imagenes',
-        expiration: {
-          maxEntries: 60,
-          maxAgeSeconds: 30 * 24 * 60 * 60,
-        },
-      },
-    },
-    {
-      urlPattern: ({ request }) => ['document', 'script', 'style'].includes(request.destination),
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'shell',
-      },
-    }
-  ]
 };

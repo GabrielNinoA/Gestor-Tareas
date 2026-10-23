@@ -622,3 +622,114 @@ h1 {
     flex-direction: column;
   }
 }
+
+/* ── Estilos Sesión 26: Notificaciones Push y Sincronización Outbox ── */
+.barra-push-sync {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: 1em 1.2em;
+  margin-bottom: 1.4em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.sync-estado-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6em;
+}
+
+.badge-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.82em;
+  font-weight: 600;
+  padding: 0.35em 0.75em;
+  border-radius: 9999px;
+  border: 1px solid #bae6fd;
+}
+
+.badge-sync.pendiente {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.badge-avisos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.82em;
+  font-weight: 600;
+  padding: 0.35em 0.75em;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+}
+
+.badge-avisos.activo {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.badge-avisos.bloqueado {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.botones-push-sync {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em;
+}
+
+.btn-push {
+  background: #ffffff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.55em 0.9em;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  transition: all 0.2s ease;
+}
+
+.btn-push:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.btn-push--primario {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0369a1;
+}
+
+.btn-push--primario:hover {
+  background: #0369a1;
+}
+
+.btn-push--secundario {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.btn-push--secundario:hover {
+  background: #fee2e2;
+}

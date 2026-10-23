@@ -33,6 +33,20 @@ import {
   escucharOrientacion,
   detectarSacudida,
 } from "./sensores.js";
+import {
+  pedirPermisoNotificaciones,
+  mostrarAvisoLocal,
+  suscribirAPush,
+  cancelarSuscripcionPush,
+  obtenerSuscripcionActual,
+  describirErrorPush,
+  enviarPushPrueba,
+} from "./notificaciones.js";
+import {
+  encolarCambio,
+  pedirSincronizacion,
+  contarCambiosPendientes,
+} from "./sync.js";
 
 // --- ESTADO GLOBAL DE LA APLICACIÓN ---
 let db;
@@ -94,6 +108,14 @@ const estadoMicTextoEl = document.getElementById("estado-mic-texto");
 // PWA: Conexión e Instalación
 const indicadorConexionEl = document.getElementById("indicador-conexion");
 const btnInstalarEl = document.getElementById("btn-instalar");
+
+// Sesión 26: Notificaciones Push y Background Sync
+const btnAvisosEl = document.getElementById("btn-avisos");
+const btnSuscribirPushEl = document.getElementById("btn-suscribir-push");
+const btnPushPruebaEl = document.getElementById("btn-push-prueba");
+const btnCancelarPushEl = document.getElementById("btn-cancelar-push");
+const estadoSyncEl = document.getElementById("estado-sync");
+const estadoAvisosEl = document.getElementById("estado-avisos");
 
 // --- UTILIDAD: FEEDBACK VISUAL ---
 let temporizadorFeedback = null;
@@ -263,6 +285,21 @@ formEl.addEventListener("submit", async (evento) => {
   }
 
   await agregarTareaBD(db, nuevaTarea);
+
+  // Sesión 26: la tarea ya está guardada en el dispositivo. Ahora se anota para
+  // enviarla al servidor cuando se pueda — sin bloquear al usuario.
+  try {
+    await encolarCambio(db, "crear-tarea", {
+      titulo: nuevaTarea.titulo,
+      prioridad: nuevaTarea.prioridad,
+      fecha: nuevaTarea.fecha || Date.now(),
+    });
+    await actualizarEstadoSync();
+    await pedirSincronizacion(db);
+  } catch (err) {
+    console.warn("No se pudo sincronizar todavía:", err.message);
+  }
+  await actualizarEstadoSync();
 
   inputTituloEl.value = "";
   inputNotaEl.value = "";
@@ -527,6 +564,139 @@ function apagarSensores() {
 }
 
 // =========================================================================
+// SESIÓN 26: NOTIFICACIONES PUSH Y BACKGROUND SYNC (OUTBOX)
+// =========================================================================
+
+async function actualizarEstadoSync() {
+  if (!db || !estadoSyncEl) return;
+  try {
+    const pendientes = await contarCambiosPendientes(db);
+    if (pendientes === 0) {
+      estadoSyncEl.textContent = "☁ Todo sincronizado con el servidor.";
+      estadoSyncEl.classList.remove("pendiente");
+    } else {
+      estadoSyncEl.textContent = `☁ ${pendientes} cambio(s) pendiente(s) de enviar.`;
+      estadoSyncEl.classList.add("pendiente");
+    }
+  } catch (err) {
+    console.warn("Error al actualizar estado de sync:", err);
+  }
+}
+
+async function pintarEstadoAvisos() {
+  if (!estadoAvisosEl) return;
+
+  if (!("Notification" in window)) {
+    estadoAvisosEl.textContent = "Avisos no soportados";
+    estadoAvisosEl.className = "badge-avisos";
+    if (btnAvisosEl) btnAvisosEl.disabled = true;
+    if (btnSuscribirPushEl) btnSuscribirPushEl.disabled = true;
+    return;
+  }
+
+  const permiso = Notification.permission;
+  if (permiso === "granted") {
+    estadoAvisosEl.textContent = "Avisos activados";
+    estadoAvisosEl.className = "badge-avisos activo";
+  } else if (permiso === "denied") {
+    estadoAvisosEl.textContent = "Avisos sin activar (bloqueado en navegador)";
+    estadoAvisosEl.className = "badge-avisos bloqueado";
+  } else {
+    estadoAvisosEl.textContent = "Avisos sin activar";
+    estadoAvisosEl.className = "badge-avisos";
+  }
+
+  const sub = await obtenerSuscripcionActual();
+  if (sub) {
+    if (btnSuscribirPushEl) btnSuscribirPushEl.hidden = true;
+    if (btnCancelarPushEl) btnCancelarPushEl.hidden = false;
+    if (btnPushPruebaEl) btnPushPruebaEl.hidden = false;
+    estadoAvisosEl.textContent = "Avisos activados · Push suscrito";
+    estadoAvisosEl.className = "badge-avisos activo";
+  } else {
+    if (btnSuscribirPushEl) btnSuscribirPushEl.hidden = false;
+    if (btnCancelarPushEl) btnCancelarPushEl.hidden = true;
+    if (btnPushPruebaEl) btnPushPruebaEl.hidden = true;
+  }
+}
+
+if (btnAvisosEl) {
+  btnAvisosEl.addEventListener("click", async () => {
+    // Permiso pedido AQUÍ, dentro del clic — y el usuario ya sabe para qué lo pulsó.
+    const permiso = await pedirPermisoNotificaciones();
+    if (permiso === "granted") {
+      await mostrarAvisoLocal(
+        "Avisos activados",
+        "Así se verán las notificaciones de Gestor de Tareas."
+      );
+      mostrarFeedback("Avisos activados correctamente.");
+    } else {
+      mostrarFeedback("No se activaron los avisos. La app sigue funcionando igual.");
+    }
+    await pintarEstadoAvisos();
+  });
+}
+
+if (btnSuscribirPushEl) {
+  btnSuscribirPushEl.addEventListener("click", async () => {
+    try {
+      const permiso = await pedirPermisoNotificaciones();
+      if (permiso !== "granted") {
+        mostrarFeedback("Permiso de notificaciones no concedido. No se puede suscribir a push.", true);
+        await pintarEstadoAvisos();
+        return;
+      }
+      mostrarFeedback("Suscribiendo navegador al servicio Push...");
+      await suscribirAPush();
+      mostrarFeedback("¡Suscripción Push registrada con éxito en el servidor!");
+    } catch (err) {
+      const mensaje = describirErrorPush(err);
+      mostrarFeedback(mensaje, true);
+      console.warn("Fallo al suscribir a push:", err);
+    }
+    await pintarEstadoAvisos();
+  });
+}
+
+if (btnCancelarPushEl) {
+  btnCancelarPushEl.addEventListener("click", async () => {
+    try {
+      await cancelarSuscripcionPush();
+      mostrarFeedback("Suscripción Push cancelada con éxito.");
+    } catch (err) {
+      mostrarFeedback(`Error al cancelar: ${err.message}`, true);
+    }
+    await pintarEstadoAvisos();
+  });
+}
+
+if (btnPushPruebaEl) {
+  btnPushPruebaEl.addEventListener("click", async () => {
+    try {
+      mostrarFeedback("Enviando push de prueba desde el servidor...");
+      const res = await enviarPushPrueba(
+        "Recordatorio Gestor de Tareas",
+        `Tienes ${tareas.length} tarea(s) en tu lista local.`,
+        "/index.html?desde=push"
+      );
+      mostrarFeedback(`Push procesado por servidor: ${res.enviados} enviado(s), ${res.fallidos} fallido(s).`);
+    } catch (err) {
+      mostrarFeedback(`Error al enviar push: ${err.message}`, true);
+    }
+  });
+}
+
+// Escuchar mensajes del Service Worker cuando vacíe la bandeja de salida (sync)
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data?.type === "SYNC_COMPLETADO") {
+      actualizarEstadoSync();
+      mostrarFeedback(`Se sincronizaron ${event.data.enviados} cambio(s) con el servidor.`);
+    }
+  });
+}
+
+// =========================================================================
 // INICIALIZACIÓN DE LA APLICACIÓN
 // =========================================================================
 
@@ -540,21 +710,57 @@ async function iniciar() {
   }
 
   pintarTodo();
+  await actualizarEstadoSync();
+  await pintarEstadoAvisos();
 }
 
 iniciar();
 
-// Registro de Service Worker (Sesión 23)
+// Registro de Service Worker (Sesión 23/26) con actualización forzada
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
     .register("/sw.js")
-    .then((reg) => console.log("SW registrado:", reg.scope))
+    .then((reg) => {
+      console.log("SW registrado:", reg.scope);
+      reg.update();
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+      reg.addEventListener("updatefound", () => {
+        const nuevo = reg.installing;
+        if (nuevo) {
+          nuevo.addEventListener("statechange", () => {
+            if (nuevo.state === "activated") {
+              console.log("Nuevo SW activado inmediatamente.");
+              pintarEstadoAvisos();
+            }
+          });
+        }
+      });
+      pintarEstadoAvisos();
+    })
     .catch((err) => console.error("Error al registrar SW:", err));
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    pintarEstadoAvisos();
+  });
 }
 
-// Indicador de conexión Online / Offline
-window.addEventListener("online", () => (indicadorConexionEl.hidden = true));
-window.addEventListener("offline", () => (indicadorConexionEl.hidden = false));
+// Indicador de conexión Online / Offline y sincronización diferida
+window.addEventListener("online", async () => {
+  indicadorConexionEl.hidden = true;
+  try {
+    await pedirSincronizacion(db);
+  } catch (err) {
+    console.warn("Error al intentar sincronizar tras volver online:", err.message);
+  }
+  await actualizarEstadoSync();
+});
+
+window.addEventListener("offline", () => {
+  indicadorConexionEl.hidden = false;
+});
+
 if (!navigator.onLine) {
   indicadorConexionEl.hidden = false;
 }
@@ -574,3 +780,4 @@ btnInstalarEl.addEventListener("click", async () => {
   deferredPrompt = null;
   btnInstalarEl.hidden = true;
 });
+

@@ -1,6 +1,9 @@
+export const VERSION_DB = 3;
+export const NOMBRE_DB = 'gestor-tareas-db';
+
 export function abrirBaseDeDatos() {
   return new Promise((resolve, reject) => {
-    const peticion = indexedDB.open('gestor-tareas-db', 2);
+    const peticion = indexedDB.open(NOMBRE_DB, VERSION_DB);
     
     peticion.onupgradeneeded = event => {
       const db = event.target.result;
@@ -14,7 +17,13 @@ export function abrirBaseDeDatos() {
       if (version < 2) {
         // Configuraciones generales como la 'sal' para la clave
         if (!db.objectStoreNames.contains('config')) {
-            db.createObjectStore('config', { keyPath: 'id' });
+          db.createObjectStore('config', { keyPath: 'id' });
+        }
+      }
+      if (version < 3) {
+        // Almacén para la bandeja de salida (Background Sync - Sesión 26)
+        if (!db.objectStoreNames.contains('outbox')) {
+          db.createObjectStore('outbox', { keyPath: 'idCambio' });
         }
       }
     };
